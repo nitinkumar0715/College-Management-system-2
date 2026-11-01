@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Marksheet - {{ student.full_name }} ({{ student.student_id }}){% endblock %}
+{% block header_title %}Student Official Grade Transcript{% endblock %}
+
+{% block content %}
+<div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+  <a href="{{ url_for('results') }}" class="btn btn-secondary">&larr; Back to Results Management</a>
+  <button onclick="window.print()" class="btn btn-primary">
+    🖨️ Print / Save as PDF
+  </button>
+</div>
+
+<!-- Official Institutional Marksheet Card -->
+<div class="card" style="max-width: 800px; margin: 0 auto; padding: 36px; border: 2px solid var(--border-color); background: var(--bg-surface);">
+  <!-- College Transcript Header -->
+  <div style="text-align: center; border-bottom: 2px solid var(--text-main); padding-bottom: 20px; margin-bottom: 24px;">
+    <div style="font-size: 32px; margin-bottom: 4px;">🎓</div>
+    <h1 style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em; text-transform: uppercase;">
+      Smart Institute of Engineering & Technology
+    </h1>
+    <p style="font-size: 13px; color: var(--text-muted);">
+      Affiliated to State Technical University · Approved by AICTE
+    </p>
+    <div style="display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--text-main); padding: 4px 16px; border-radius: 4px; text-transform: uppercase;">
+      Semester Grade Card / Marksheet
+    </div>
+  </div>
+
+  <!-- Student Meta Information -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; font-size: 14px; background: var(--bg-primary); padding: 16px; border-radius: 8px;">
+    <div>
+      <div><span style="color: var(--text-muted);">Student Name:</span> <strong>{{ student.full_name }}</strong></div>
+      <div style="margin-top: 6px;"><span style="color: var(--text-muted);">Roll / Student ID:</span> <code>{{ student.student_id }}</code></div>
+      <div style="margin-top: 6px;"><span style="color: var(--text-muted);">Admission Date:</span> {{ student.admission_date }}</div>
+    </div>
+    <div>
+      <div><span style="color: var(--text-muted);">Degree Course:</span> <strong>{{ student.course_name }}</strong></div>
+      <div style="margin-top: 6px;"><span style="color: var(--text-muted);">Department:</span> {{ student.department }}</div>
+      <div style="margin-top: 6px;"><span style="color: var(--text-muted);">Current Status:</span> Regular B.Tech Student</div>
+    </div>
+  </div>
+
+  <!-- Subject Grades Table -->
+  <table class="modern-table" style="margin-bottom: 24px;">
+    <thead>
+      <tr>
+        <th>Subject Name</th>
+        <th>Semester</th>
+        <th>Marks Obtained</th>
+        <th>Max Marks</th>
+        <th>Percentage</th>
+        <th>Grade</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+        <tr>
+          <td><strong>{{ r.subject }}</strong></td>
+          <td>{{ r.semester }}</td>
+          <td>{{ r.marks_obtained }}</td>
+          <td>{{ r.total_marks }}</td>
+          <td>{{ r.percentage }}%</td>
+          <td><strong style="color: var(--primary);">{{ r.grade }}</strong></td>
+          <td>
+            {% if r.status == 'Pass' %}
+              <span class="badge badge-pass">Pass</span>
+            {% else %}
+              <span class="badge badge-fail">Fail</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            No examination papers registered for this student yet.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Cumulative Summary Box -->
+  {% if results %}
+    <div style="border-top: 2px dashed var(--border-color); padding-top: 18px; margin-bottom: 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+      <div style="background: var(--bg-primary); padding: 12px; border-radius: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted); display: block;">GRAND TOTAL</span>
+        <strong style="font-size: 16px;">{{ total_obtained }} / {{ total_max }}</strong>
+      </div>
+      <div style="background: var(--bg-primary); padding: 12px; border-radius: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted); display: block;">OVERALL PERCENTAGE</span>
+        <strong style="font-size: 16px; color: var(--primary);">{{ overall_pct }}%</strong>
+      </div>
+      <div style="background: var(--bg-primary); padding: 12px; border-radius: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted); display: block;">FINAL GRADE</span>
+        <strong style="font-size: 16px;">{{ overall_grade }}</strong>
+      </div>
+      <div style="background: var(--bg-primary); padding: 12px; border-radius: 6px;">
+        <span style="font-size: 11px; color: var(--text-muted); display: block;">EXAM RESULT</span>
+        <strong style="font-size: 16px; color: {% if overall_status == 'Pass' %}#16a34a{% else %}#dc2626{% endif %};">
+          {{ overall_status }}
+        </strong>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Transcript Signature Section -->
+  <div style="display: flex; justify-content: space-between; margin-top: 50px; padding-top: 20px; font-size: 13px; color: var(--text-muted);">
+    <div style="text-align: center; width: 180px; border-top: 1px solid var(--border-color); padding-top: 6px;">
+      Dean / HOD Signature
+    </div>
+    <div style="text-align: center; width: 180px; border-top: 1px solid var(--border-color); padding-top: 6px;">
+      Controller of Examinations
+    </div>
+  </div>
+</div>
+{% endblock %}

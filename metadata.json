@@ -1,0 +1,6 @@
+{
+  "name": "Smart College Management System",
+  "description": "Comprehensive, modern, and responsive College Management System with Student, Teacher, Course, Attendance, Result, and Notice Management, built for BTech students.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

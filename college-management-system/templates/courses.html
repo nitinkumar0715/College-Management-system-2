@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Courses - Smart College CMS{% endblock %}
+{% block header_title %}Academic Degree Programs & Courses{% endblock %}
+
+{% block content %}
+<!-- Action Toolbar: Search & Add Course -->
+<div class="action-toolbar">
+  <form method="GET" action="{{ url_for('courses') }}" style="display: flex; gap: 10px; flex: 1; max-width: 460px;">
+    <div class="search-box">
+      <span>🔍</span>
+      <input 
+        type="text" 
+        name="search" 
+        placeholder="Search courses by code or title..." 
+        value="{{ search }}"
+      >
+    </div>
+    <button type="submit" class="btn btn-secondary">Search</button>
+    {% if search %}
+      <a href="{{ url_for('courses') }}" class="btn btn-secondary">Reset</a>
+    {% endif %}
+  </form>
+
+  <button type="button" class="btn btn-primary" data-open-modal="addCourseModal">
+    ➕ Add New Course
+  </button>
+</div>
+
+<!-- Courses Grid / Table Card -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">
+      Offered Courses ({{ courses|length }})
+    </div>
+    <span style="font-size: 13px; color: var(--text-muted);">
+      Curriculum & Departmental Programs
+    </span>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Course ID</th>
+            <th>Program Name</th>
+            <th>Department</th>
+            <th>Duration</th>
+            <th>Enrolled Students</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+            <tr>
+              <td><code style="font-weight: 700; font-size: 13px;">{{ c.course_id }}</code></td>
+              <td><strong>{{ c.course_name }}</strong></td>
+              <td><span class="badge badge-blue">{{ c.department }}</span></td>
+              <td>{{ c.duration }}</td>
+              <td>
+                <strong>{{ c.enrolled_count }}</strong>
+                <span style="color: var(--text-muted); font-size: 12px;">students</span>
+              </td>
+              <td style="text-align: right;">
+                <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm"
+                    onclick="openEditCourseModal('{{ c.course_id }}', '{{ c.course_name }}', '{{ c.department }}', '{{ c.duration }}')"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <form method="POST" action="{{ url_for('delete_course', course_id=c.course_id) }}" onsubmit="return confirm('Are you sure you want to delete course {{ c.course_name }} ({{ c.course_id }})?');" style="display:inline;">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                      🗑️
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                No course programs configured.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 1: Add Course Form -->
+<div id="addCourseModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Create Degree Course Program</h2>
+      <button type="button" class="modal-close" data-close-modal>&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_course') }}">
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="add_c_id">Course Code / ID *</label>
+            <input type="text" id="add_c_id" name="course_id" class="form-control" placeholder="e.g. AI106" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="add_c_duration">Course Duration *</label>
+            <input type="text" id="add_c_duration" name="duration" class="form-control" value="4 Years" placeholder="e.g. 4 Years" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="add_c_name">Full Program Title *</label>
+          <input type="text" id="add_c_name" name="course_name" class="form-control" placeholder="e.g. B.Tech Artificial Intelligence & Machine Learning" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="add_c_dept">Academic Department *</label>
+          <select id="add_c_dept" name="department" class="form-control" required>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Technology">Information Technology</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Mechanical">Mechanical</option>
+            <option value="Civil">Civil</option>
+            <option value="Management Studies">Management Studies</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Edit Course Form -->
+<div id="editCourseModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Course: <span id="editCourseTitleId"></span></h2>
+      <button type="button" class="modal-close" data-close-modal>&times;</button>
+    </div>
+    <form id="editCourseForm" method="POST" action="">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="edit_c_name">Program Title *</label>
+          <input type="text" id="edit_c_name" name="course_name" class="form-control" required>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label" for="edit_c_dept">Department *</label>
+            <select id="edit_c_dept" name="department" class="form-control" required>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Mechanical">Mechanical</option>
+              <option value="Civil">Civil</option>
+              <option value="Management Studies">Management Studies</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit_c_duration">Duration *</label>
+            <input type="text" id="edit_c_duration" name="duration" class="form-control" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openEditCourseModal(id, name, dept, duration) {
+    document.getElementById('editCourseTitleId').textContent = id;
+    document.getElementById('edit_c_name').value = name;
+    document.getElementById('edit_c_dept').value = dept;
+    document.getElementById('edit_c_duration').value = duration;
+    
+    document.getElementById('editCourseForm').action = "/courses/edit/" + encodeURIComponent(id);
+    document.getElementById('editCourseModal').classList.add('show');
+  }
+</script>
+{% endblock %}
